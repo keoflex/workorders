@@ -61,7 +61,6 @@
       if ($desc == ""){$valid = False;}
       if ($xml !== ""){
         // TODO: Check for valid XML
-      if ($workflow == ""){$valid = false;}
       }
       return $valid;
     }
@@ -199,7 +198,7 @@
           $delformid = "delform" . $formid;            
 
 		  echo "<td><form id='$delformid' method='post'><input name='id' type='hidden' value='$formid'>                
-<input name='deleteform' type='hidden'><a href='' title='Delete Form' onclick=\"document.getElementById('$delformid').submit();return false;\" class='btn btn-danger'>X".$pg_encrypt_key."</a></form></td>";
+<input name='deleteform' type='hidden'><a href='' title='Delete Form' onclick=\"document.getElementById('$delformid').submit();return false;\" class='btn btn-danger'>X</a></form></td>";
           echo "</tr>";
         }
         echo "</tbody>";
