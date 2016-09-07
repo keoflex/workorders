@@ -1,5 +1,6 @@
 <?php
-    require_once('./resources/appconfig.php');
+	$folder = null; // set default value or error in navbar. XDebug
+    require_once('config/appconfig.php');
     require_once("./resources/library/appinfo.php");
     $appInfoDbAdapter = new AppInfo($dsn, $user_name, $pass_word);
     $system_version =$appInfoDbAdapter->Get('System Version');
@@ -12,10 +13,12 @@
     }
     
     require_once('./resources/library/workorder.php');
+    require_once './resources/library/collaborator.php';
     require_once('./config/db.php');
-    $woDbAdapter = new WorkorderDataAdapter(DB_DSN, DB_USER, DB_PASS, $_SESSION['user_email']);
+    $woDbAdapter = new WorkorderDataAdapter($dsn, $user_name, $pass_word, $_SESSION['user_email']);
     $wo = $woDbAdapter->Select($id);
     $woViewModel = new WorkorderViewModel($wo, $key);
+    $collabViewModel = new CollaboratorViewModel($dsn, $user_name, $pass_word, $_SESSION['user_email']);
 
     $acceptBtnText = "APPROVE (not final)";
     $rejectBtnText = "DENY";
@@ -88,17 +91,20 @@
                 <div class="row">
                     <div class="col-lg-3"></div>
                     <div class="col-lg-6">
-                    <?php
-                        if ($woViewModel->valid) {
-                            echo "<div class='jumbotron well'>";
-                            echo "<div class='" . $woViewModel->stateColorClass . "'>" . $woViewModel->approveState . " (" . $wo->currentApprover . ")" . "</div>";
-                            echo "<h3>Submitted By</h3><span>" . $wo->createdBy . "</span>";
-                            echo "</div>";
+                    <?php if ($woViewModel->valid) { ?>
+                        <div class="<?=$woViewModel->stateColorClass?>"><?=$woViewModel->approveState . " (" . $wo->currentApprover . ")"?></div>
+                        <div class="alert alert-info">
+                            <h4><span class="fa fa-user" aria-hidden="true" /> Requested By</h4>
+                            <span><?=$wo->createdBy?></span>
+                        </div>
+                        <?php 
                             foreach ($woViewModel->fieldData as $fieldkey => $value) {
-                                echo "<h4>" . $fieldkey . "</h4>";
-                                echo "<P>" . $value . "</p>";
+                                echo "<h4>" . $value["Label"] . "</h4>";
+                                echo "<P>" . $value["Data"] . "</p>";
                             }
-                            echo "<h4>Approver Comments</h4>";
+                        ?>
+                        <h4>Approver Comments</h4>
+                        <?php
                             if (count($woViewModel->comments) == 0) {
                                 echo "<span>No comments posted.</span>";
                             } else {
@@ -116,7 +122,8 @@
                                 }                                
                                 echo "</ul>";
                             }
-                        } else {
+                        ?>
+                        <?php } else {
                             echo '<div class="alert alert-danger"><i class="fa fa-exclamation-triangle"></i> Unable to view the workorder. You may not be authorized...</div>';
                         }
                     ?>
@@ -138,12 +145,19 @@
                                 <label for="comment">Comments</label>
                                 <textarea id="comment" name="comment" class="form-control" rows="5" required></textarea>
                             </div>
-                            <button id="approve-btn" type="button" class="btn btn-success"><?php echo $acceptBtnText; ?></button>
-                            <button id="reject-btn" type="button" class="btn btn-danger"><?php echo $rejectBtnText; ?></button>
-                            <a  href="index.php?I=<?php echo pg_encrypt("WORKORDER-edit|".$id."|".$key,$pg_encrypt_key,"encode"); ?>" type="button" class="btn btn-primary">Edit Workorder</a>
+                            <div class="row">
+                                <div id="approve-btn-group" class="col-xs-12">
+                                    <button id="approve-btn" type="button" class="btn btn-success"><?php echo $acceptBtnText; ?></button>
+                                    <button id="reject-btn" type="button" class="btn btn-danger"><?php echo $rejectBtnText; ?></button>
+                                    <a  href="index.php?I=<?php echo pg_encrypt("WORKORDER-edit|".$id."|".$key,$pg_encrypt_key,"encode"); ?>" type="button" class="btn btn-primary">Edit Workorder</a>
+                                </div>
+                                <div id="save-collab-btn-group" class="col-xs-12" hidden>
+                                    <button id="collab-save-btn" type="button" class="btn btn-success">Invite Collaborator</button>
+                                    <button id="collab-clear-btn" type="button" class="btn btn-danger">Cancel</button>
+                                </div>
+                            </div>
                         </form>
                     <?php } ?>
-                        
                     </div>
                     <div class="col-lg-3"></div>
                 </div>
@@ -183,7 +197,13 @@
     </div>
     <!-- /#wrapper -->
 
-    <?php require_once('./includes/jsbs.php'); ?>
+    <!-- jQuery -->
+    <script src="js/jquery.js"></script>
+    <!-- underscore -->
+    <script src="js/underscore-min.js"></script>
+    <!-- Bootstrap Core JavaScript -->
+    <script src="js/bootstrap.min.js"></script>
+
 </body>
 
 </html>

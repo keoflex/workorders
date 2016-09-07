@@ -1,6 +1,7 @@
 <?php
-    require_once('./resources/appconfig.php');
-    require_once("./resources/library/appinfo.php");
+	$folder = null; // set default value or error in navbar. XDebug
+    require_once('config/appconfig.php');
+    require_once("resources/library/appinfo.php");
     $appInfoDbAdapter = new AppInfo($dsn, $user_name, $pass_word);
     $system_version =$appInfoDbAdapter->Get('System Version');
 ?>
@@ -40,10 +41,15 @@
         ?>
         <!-- Render Form from post data -->
         <?php
+        $illegalGroupChars = array(" ", "/"); // Include illegal characters for group name.
+        $replaceIllegalGroupChars = "-"; // Group name is used for HTML element id's so replace illegal chars with this char.
+
         $currentUserEmail = $_SESSION['user_email'];
-        $currentUserGroup = $_SESSION['user_group'];
+        $currentUserGroup = str_replace($illegalGroupChars, $replaceIllegalGroupChars, $_SESSION['user_group']);
         $hideFormClassString = "";
         $fromEmailAddress = 'noreply@dumasisd.org';
+        $formSubmissionMessage = "";
+        $hideFormRenderingClassString = "";
         // Handle post
         if (strtoupper($_SERVER['REQUEST_METHOD']) === 'POST')
         {
@@ -51,7 +57,7 @@
             if(isset($_POST['id']))
             {
                 $formId = $_POST['id'];
-                $formsDataAdapter = new FormsDataController();
+                $formsDataAdapter = new FormsDataController($dsn, $user_name, $pass_word);
                 $formToRender = $formsDataAdapter->getFormById($formId);
                 $formName = $formToRender['FormName'];
                 $formDescription = $formToRender['Description'];
@@ -61,19 +67,19 @@
                     // POST['id'] is not present. Should handle posted form data here
                     $formPostHandler = new Pacman($_POST);
                     // Need to load the form. Form data is stored with new workorder.
-                    $formsDataAdapter = new FormsDataController();
+                    $formsDataAdapter = new FormsDataController($dsn, $user_name, $pass_word);
                     $form = $formsDataAdapter->getFormById($formPostHandler->formId);
                     // Setup data needed for creating workorder and rendering page
                     $hideFormRenderingClassString = "hidden";
                     $formName = $formPostHandler->formName; //$_POST['form-name'];
                     $formDescription = $formPostHandler->formDescription; //$_POST['form-description'];
                     // Form Workflow field holds array of approver email addresses. We need to transform this to work with the data.
-                    $approverArray = explode(',', $form['Workflow']);
+                    $approverArray = ApproverHelper::ParseRawWorkflowData($form['Workflow']);
                     $approvers = ApproverHelper::NewApproverArrayFromEmailArray($approverArray);
                     // Get the groupWorkflow for the users group
                     $groupWorkflows = $form['GroupWorkflows'];
-                    $groupWorkflows = json_decode($groupWorkflows);
-                    $userGroupApproverArray = $groupWorkflows->$currentUserGroup;
+                    $groupWorkflows = json_decode($groupWorkflows, true);
+                    $userGroupApproverArray = $groupWorkflows[$currentUserGroup];
                     $groupApprovers = ApproverHelper::NewApproverArrayFromEmailArray($userGroupApproverArray);
                     // merge the approver arrays with group first and create the workflow for the form
                     $mergedApprovers = ApproverHelper::MergeApproverArrays($groupApprovers, $approvers);

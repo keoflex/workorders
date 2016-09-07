@@ -2,7 +2,7 @@
 
 require_once("config/db.php");
 require_once("classes/Login.php");
-require_once('./resources/appconfig.php');
+require_once('config/appconfig.php');
 
 require_once "./resources/library/appinfo.php";
 $appInfoDbAdapter = new AppInfo($dsn, $user_name, $pass_word);
@@ -87,8 +87,8 @@ if (isset($login)) {
 	*/
 	
 	
-	
-				if($include_address == ""){
+			$folder = null; // set default value or error in navbar. XDebug
+			if(isset($include_address) == false || $include_address == ""){
 				$include_address = "page_content/index.php";
 			}
 			if(isset($_GET['I'])){
@@ -158,12 +158,12 @@ if (isset($login)) {
 
             <div class="container-fluid">
             <?php
-			if($BASE_URL == "http://localhost/workorder"){
+			if(getenv("WO_ENV_ENABLED") == 1 || $BASE_URL == "http://localhost/workorder"){
                 ?>
                     <div class="col-lg-12">
                         <div class="alert alert-danger alert-dismissable">
                             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-                            <i class="fa fa-info-circle"></i>  <strong>ALERT </strong> Your are on the local server
+                            <i class="fa fa-info-circle"></i>  <strong>ALERT </strong> You are on the local server
                         </div>
                     </div>
 			<?php

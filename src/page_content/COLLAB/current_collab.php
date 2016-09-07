@@ -4,24 +4,24 @@
     
     $currentUserEmail = $_SESSION['user_email'];
     $woDbAdapter = new WorkorderDataAdapter($dsn, $user_name, $pass_word, $currentUserEmail);
-   // $workorders = $woDbAdapter->SelectAll(300);
-  
-	$where_perams = '{"createdBy| =": "'.$currentUserEmail.'","approveState| =": "PendingApproval"}';
-	$where_object = json_decode($where_perams);
-	$workorders = $woDbAdapter->SelectWhereJSON($where_object);
+   if($_SESSION['user_perms'] >2){
+		$query_block = '"createdBy|=": "'.$currentUserEmail.'",';
+   }
+   $workorders = $woDbAdapter->SelectAllWhereCollaborator(300);
 ?>
 
 		<section>
-			<h1>YOUR PENDING WORKORDERS</h1>
+			<h1>YOU ARE COLLABORATING</h1>
 			<div class="info">
 				<p>&nbsp;</p>
 			</div>
 			<table id="matrixDT" class="display" cellspacing="0" width="100%">
 				<?php
 				$th_fields = "
-				<th>Created Date</th>
-				<th>Current Approver</th>
-				<th>Form Name</th>
+				<th>Date Created</th>
+				
+            <th>Created By</th>
+            <th>View</th>
             <th>Type</th>
 				";
 				?>
@@ -48,9 +48,10 @@
 							?>
                             <tr>
                                 <td><h4><?php echo  $value->createdAt; ?></h4></td>
-                                <td><h4><?php echo  $value->currentApprover; ?></h4></td>
-                                <td><h4><?php echo  $value->formName; ?></h4></td>								
+                                <td><h4><?php echo  $value->createdBy; ?></h4></td>
+                                <!-- workorderview.php?id=13&key=6EAF159514D440656E37BD6924ECD446 -->
                                 <td><h4><?php echo "<a href='./?I=" . pg_encrypt('WORKORDER-work|'.$value->id.'|'.$value->viewOnlyKey,$pg_encrypt_key,'encode') . "' class=\"btn btn-primary\">VIEW</a>"; ?></h4></td>
+                                <td><?php echo $value->formName; ?></td>
 							</tr>
                             <?php	
 						
@@ -59,3 +60,5 @@
                         ?>
 				</tbody>
 			</table>
+            </section>
+            

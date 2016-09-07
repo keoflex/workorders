@@ -4,7 +4,7 @@
     *    Requires valid approver key before update.
    */
 
-    require_once('./resources/appconfig.php');
+    require_once('config/appconfig.php');
     require_once("./resources/library/appinfo.php");
     $appInfoDbAdapter = new AppInfo($dsn, $user_name, $pass_word);
     $system_version =$appInfoDbAdapter->Get('System Version');
@@ -169,8 +169,8 @@
                             echo "<h3>Submitted By</h3><span>" . $wo->createdBy . "</span>";
                             echo "</div>";
                             foreach ($woViewModel->fieldData as $fieldkey => $value) {
-                                echo "<h4>" . $fieldkey . "</h4>";
-                                echo "<P>" . $value . "</p>";
+                                echo "<h4>" . $value["Label"] . "</h4>";
+                                echo "<P>" . $value["Data"] . "</p>";
                             }
                             echo "<h3>Comments</h3>";
                             if (count($woViewModel->comments) == 0) {
